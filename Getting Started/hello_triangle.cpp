@@ -9,6 +9,20 @@ void processInput(GLFWwindow *window);
 const unsigned int SCR_WIDTH = 800;
 const unsigned int SCR_HEIGHT = 600;
 
+const char *vertexShaderSource = "#version 450 core\n"
+	"layout (location = 0) in vec3 aPos;\n"
+	"void main()\n"
+	"{\n"
+	"	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0\n;"
+	"}\0";
+
+const char *fragmentShaderSource = "#version 450 core\n"
+	"out vec4 fragColor;\n"
+	"void main()\n"
+	"{\n"
+	"	fragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+	"}\0";
+
 int main()
 {
 
@@ -34,6 +48,49 @@ int main()
         return -1;
     }    
 
+//	Compile vertex shader
+	unsigned int vertexShader;
+	vertexShader = glCreateShader(GL_VERTEX_SHADER);
+	glShaderSource(vertexShader, 1, &vertexShaderSource, NULL);
+	glCompileShader(vertexShader);
+/*	glShaderSource takes the shader object to compile as the first parameter, the second specifies how many 
+	strings we are passing, and the third is the source code of the vertex shader. We can also check for errors: */
+	int success;
+	char infoLog[512];
+	glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+	if(!success) {
+		glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+		std::cout << "Failed to compile vertex shader!\n" << infoLog << std::endl;
+	}
+	
+//	Compile fragment shader
+	unsigned int fragmentShader;
+	fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+	glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+	glCompileShader(fragmentShader);
+	
+	glGetShaderiv(fragmentShader, 512, NULL, infoLog);
+	if(!success) {
+		glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+		std::cout << "Failed to compile fragment shader!\n" << infoLog << std::endl;
+	}
+	
+//	Link shaders to use them after compilation
+	unsigned int shaderProgram;
+	shaderProgram = glCreateProgram();
+	glAttachShader(shaderProgram, vertexShader);
+	glAttachShader(shaderProgram, fragmentShader);
+	glLinkProgram(shaderProgram);
+//	Check for errors
+	glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+	if(!success) {
+		glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+	}
+
+//	Clean up shaders
+	glDeleteShader(vertexShader);
+	glDeleteShader(fragmentShader);
+	
 //	Define the triangle's coordinates in normalized device coordinates using a float array
 //	Each vertex has a z coordinate of 0 to make it look like it is 2D
 	float vertices[] = {
@@ -67,9 +124,6 @@ int main()
 				the data is changed a lot and used many times
 	Now we will create the shaders. For this file the shaders will be hard coded as strings at 
 	the top of the file. */
-
-
-	
 	
     while (!glfwWindowShouldClose(window))
     {
@@ -79,6 +133,8 @@ int main()
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
+		
+		glUseProgram(shaderProgram);
 
 
         glfwSwapBuffers(window);
