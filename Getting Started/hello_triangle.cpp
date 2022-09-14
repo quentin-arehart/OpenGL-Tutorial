@@ -102,8 +102,10 @@ int main()
 /*	A VBO can store a large number of vertices in the GPUs memory. This buffer has a unique ID
 	corresponding to that buffer. We can generate one with a buffer ID using the glGenBuffers
 	function. */	
-	unsigned int VBO;
+	unsigned int VBO, VAO;
+	glGenBuffers(1, &VAO);
 	glGenBuffers(1, &VBO);
+	glBindVertexArray(VAO);
 /*	The buffer type of a VBO is GL_ARRAY_BUFFER. OpenGL lets us bind to several buffers at once
 	provided they have a different buffer type. We can bind the newly created buffer to the
 	GL_ARRAY_BUFFER target with the glBindBuffer function: */
@@ -124,6 +126,24 @@ int main()
 				the data is changed a lot and used many times
 	Now we will create the shaders. For this file the shaders will be hard coded as strings at 
 	the top of the file. */
+
+//	Linking vertex attributes
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+/*	The first parameter specifices which vertex attribute we want to configure.
+	The second parameter specifies the size of the vertex attribute. A vec3 is composed of 3 values. 
+	The third parameter specifies the type of data being passed. 
+	The fourth parameter specifies if we want the data to be normalized.
+	The fifth argument is the stride and tells us the space between consecutive vertex attributes (3 times the size of a float away).
+	The last parameter is of type void* and requires a cast; it is the offset of where the data begins in the buffer. */
+	
+//	Vertex Array Object
+/*	A VAO can be bound just like a VBO. OpenGL requires a VAO otherwise it might not draw anything.
+	A VAO stores:
+			Calls to glEnableVertexAttribArray or glDisableVertexAttribArray
+			Vertex attribute configurations via glVertexAttribPointer
+			VBOs assosicated with vertex attributes */
+
 	
     while (!glfwWindowShouldClose(window))
     {
@@ -135,6 +155,11 @@ int main()
         glClear(GL_COLOR_BUFFER_BIT);
 		
 		glUseProgram(shaderProgram);
+		glBindVertexArray(VAO);
+//	Draw the triangle
+		glDrawArrays(GL_TRIANGLES, 0, 3)
+//	Where 0 is the starting index of the vertex array and 3 specifies the amount of vertices to draw
+		
 
 
         glfwSwapBuffers(window);
