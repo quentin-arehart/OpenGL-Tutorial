@@ -96,15 +96,22 @@ int main()
 	float vertices[] = {
 		-0.5f, -0.5f, 0.0f,
 		0.5f, -0.5f, 0.0f,
-		0.0f, 0.5f, 0.0f
+		-0.5f, -0.5f, 0.0f,
+		-0.5, -0.5f. 0.0f		
 	};
+	
+	unsigned int indices[] = {
+		0, 1, 3,
+		1, 2, 3
+	}; 
 
 /*	A VBO can store a large number of vertices in the GPUs memory. This buffer has a unique ID
 	corresponding to that buffer. We can generate one with a buffer ID using the glGenBuffers
 	function. */	
-	unsigned int VBO, VAO;
+	unsigned int VBO, VAO, EBO;
 	glGenBuffers(1, &VAO);
 	glGenBuffers(1, &VBO);
+	glGenBuffers(1, &EBO)
 	glBindVertexArray(VAO);
 /*	The buffer type of a VBO is GL_ARRAY_BUFFER. OpenGL lets us bind to several buffers at once
 	provided they have a different buffer type. We can bind the newly created buffer to the
@@ -126,6 +133,8 @@ int main()
 				the data is changed a lot and used many times
 	Now we will create the shaders. For this file the shaders will be hard coded as strings at 
 	the top of the file. */
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
 //	Linking vertex attributes
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
@@ -144,6 +153,20 @@ int main()
 			Vertex attribute configurations via glVertexAttribPointer
 			VBOs assosicated with vertex attributes */
 
+// Element Buffer Object
+/*	This is a buffer that stores indices to decide what vertices to draw. It is called indexed
+	drawing and can be used to specify vertices with indices to save memory. */	
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+/*	Wireframe Mode
+	You can configure how OpenGL draws its primitives via glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+	The first argument says we want to apply it to the front and back of all triangles, and the
+	second tells us to draw them as lines. Any subsequent drawing calls will render the triangles
+	in wireframe mode until we set it back to GL_FILL. */
+
+//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE)
+
 	
     while (!glfwWindowShouldClose(window))
     {
@@ -157,10 +180,12 @@ int main()
 		glUseProgram(shaderProgram);
 		glBindVertexArray(VAO);
 //	Draw the triangle
-		glDrawArrays(GL_TRIANGLES, 0, 3)
-//	Where 0 is the starting index of the vertex array and 3 specifies the amount of vertices to draw
-		
-
+		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0)
+/*	Where 6 is the count of elements we want to draw, GL_UNSIGNED_INT is the type of indices, and
+	0 is the offset in the EBO. glDrawElements takes its indices from the EBO currently bound to
+	the GL_ELEMENT_ARRAY_BUFFER target. 
+	
+*/
 
         glfwSwapBuffers(window);
         glfwPollEvents();
