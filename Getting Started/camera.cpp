@@ -131,3 +131,9 @@
 		  
 //	The camera will now move at a constant 2.5 units per second. 
 
+/*	Look Around
+
+	To look around the scene with the mouse, we have to change the cameraFront vector based on
+	the input of the mouse. 
+*/
+
