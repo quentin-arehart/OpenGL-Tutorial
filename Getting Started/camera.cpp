@@ -44,6 +44,90 @@
 
 	glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);
 
-		
+/*	Look At
+
+	Using these camera vectors, we can now create a LookAt matrix that proves very useful for 
+	creating a camera. GLM does all the hard work for us: */
+
+	glm::mat4 view;
+	view = glm::lookAt(glm::vec3(0.0f, 0,0f, 3.0f),
+					   glm::vec3(0.0f, 0.0f, 0.0f),
+					   glm::vec3(0.0f, 1.0f, 0.0f));
+
+/*	The glm::lookAt function requires a position, target, and up vector respectively. We can also
+	rotate the camera around the scene. We keep the target of the scene at (0, 0, 0). We use a 
+	little trigonometry to create an x and z coordinate each frame that represents a point on a 
+	circle and will be used for the camera position. By recalculating the x and y coordinate over
+	time we're traversing all the points in a circle and making the camera rotate around the 
+	scene. We enlarge this circle by a pre-defined radius and create a new view matrix each from
+	using the glfwGetTime function: */
+
+	const float radius = 10.0f;
+	float camX = sin(glfwGetTime()) * radius;
+	float camZ = cos(glfwGetTime()) * radius;
+	glm::mat4 view;
+	view = glm::LookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
+
+/*	Walk Around
+
+	To be able to move around the scene ourselves we need to set up a camera system, and it is 
+	useful to define those variables at the top of the program, and alter the lookAt function 
+	accordingly: */
+
+	glm::vec3 cameraPos = glm::vec3 (0.0f, 0.0f, 3.0f);
+	glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+	glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+
+	view = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
+
+//	Now we can add some key commands to processInput 
+
+	void processInput(GLFWwindow *window) {
+		...
+		const float cameraSpeed = 0.05f;
+		if(glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+			cameraPos += cameraSpeed * cameraFront;
+		if(glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+			cameraPos -= cameraSpeed * cameraFront;
+		if(glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		   cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+		if(glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+			cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+	}
+
+/*	Whenever we press the WSAD keys, the camera's position is updated accordingly. To move 
+	forward or backward we add or substract the direction vector from the position vector scaled
+	by some speed value. If we want to move sideways we do a cross product to create a right vector
+	and we move along it. The right vector must be normalized otherwise the movement speed will not
+	be consistent. 
 	
+	Currently, we have a constant value for movement speed. In practice, different machines have
+	different processing power and the result of that is that some are able to render much more frames
+	per second than others. When shipping an application it is important to make sure that it runs 
+	the same on all hardware. 
+	
+	Many applications and games usually keep track of a deltatime variable that stores the time it took
+	to render the last frame. Then all velocities are multiplied by this deltaTime value. That is to
+	say the velocity of the camera will be balanced out so each user will have the same experience. 
+	
+	To calculate the deltaTime, we keep track of two global variables: */
+
+	float deltaTime = 0.0f; //	time between current and last frame
+	float lastFrame = 0.0f;	//	time of last frame
+
+//	Within each frame calculate the new deltaTime for later use:
+	
+	float currentFrame = glfwGetTime();
+	deltaTime = currentFrame - lastFrame;
+	lastFrame = currentFrame;
+
+//	Now we can take into account deltaTime when calculating velocities:
+
+	void processInput(GLFWwindow *window) {
+		
+		float cameraSpeed = 2.5f * deltaTime;
+		[...]
+	}
+		  
+//	The camera will now move at a constant 2.5 units per second. 
 
