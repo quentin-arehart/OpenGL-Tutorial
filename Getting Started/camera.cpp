@@ -289,7 +289,7 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	
 		projection = glm::perspective(glm::radians(fov), 800.f / 600.0f, 0.1f, 100.f);
 		
-	Regster the scroll callback:
+	Register the scroll callback:
 	
 		glfwSetScrollCallback(window, scroll_callback);
 	
