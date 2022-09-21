@@ -203,6 +203,94 @@
 	
 		yaw += xoffset;
 		pitch += yoffset;
+		
+	We also need some constraints so the camera doesn't make weird movements. The pitch needs to be
+	constrained to 89 degrees above (at 90 the LookAt matrix flips) and -89 degrees below. 
+	
+		if (pitch > 89.0f)
+			pitch = 89.0f;
+		if (pitch < -89.0f);
+			pitch = -89.0f;
+			
+	Lastly we calculate the actual direction vector using the previous formulas: 
+	
+		glm::vec3 direction;
+		direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+		direction.y = sin(glm::radians(pitch));
+		direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+		cameraFront = glm::normalize(direction);
+		
+	The compound direction vector now contains all the rotations calculated from the mouse's
+	movement. We will add global bool variable to prevent sudden jumps whenever the window first
+	receives focus of the cursor. 
+	
+		if (firstMouse) 
+		{
+			lastX = xpos;
+			lastY = ypos;
+			firstMouse = false;
+		}
+		
+	The final code is then: */
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    if (firstMouse)
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+  
+    float xoffset = xpos - lastX;
+    float yoffset = lastY - ypos; 
+    lastX = xpos;
+    lastY = ypos;
+
+    float sensitivity = 0.1f;
+    xoffset *= sensitivity;
+    yoffset *= sensitivity;
+
+    yaw   += xoffset;
+    pitch += yoffset;
+
+    if(pitch > 89.0f)
+        pitch = 89.0f;
+    if(pitch < -89.0f)
+        pitch = -89.0f;
+
+    glm::vec3 direction;
+    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
+    direction.y = sin(glm::radians(pitch));
+    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+    cameraFront = glm::normalize(direction);
+} 
+
+/*									Zoom
+
+	We can also implement a zooming interface. WHen the field of view becomes smaller, the 
+	scene's projected space gets smaller. The smaller space is projected over the same NDC, 
+	giving the illusion of zooming in. To zoom in, we will use the scroll wheel. We need a 
+	callback function for mouse scrolling:
+	
+		void scroll_callback(GLFWwindow *window, double xoffset, double yoffset)
+		{
+			fov -= (float)yoffset;
+			if (fov < 1.0f)
+				fov = 1.0f;
+			if (fov > 45.0f)
+				fov = 45.0f;
+		}
+		
+	The yoffset value tells the amount we scroll vertically. WHen the function is called we 
+	change the content of the globally declared fov variable. Now we need to upload the 
+	perspective projection matrix to the GPU each frame, with the fov variable as its field of
+	view:
+	
+		projection = glm::perspective(glm::radians(fov), 800.f / 600.0f, 0.1f, 100.f);
+		
+	Regster the scroll callback:
+	
+		glfwSetScrollCallback(window, scroll_callback);
 	
 */
-
