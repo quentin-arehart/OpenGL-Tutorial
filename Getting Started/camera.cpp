@@ -44,7 +44,7 @@
 
 	glm::vec3 cameraUp = glm::cross(cameraDirection, cameraRight);
 
-/*	Look At
+/*										Look At
 
 	Using these camera vectors, we can now create a LookAt matrix that proves very useful for 
 	creating a camera. GLM does all the hard work for us: */
@@ -68,7 +68,7 @@
 	glm::mat4 view;
 	view = glm::LookAt(glm::vec3(camX, 0.0, camZ), glm::vec3(0.0, 0.0, 0.0), glm::vec3(0.0, 1.0, 0.0));
 
-/*	Walk Around
+/*										Walk Around
 
 	To be able to move around the scene ourselves we need to set up a camera system, and it is 
 	useful to define those variables at the top of the program, and alter the lookAt function 
@@ -131,9 +131,78 @@
 		  
 //	The camera will now move at a constant 2.5 units per second. 
 
-/*	Look Around
+/*										Look Around
 
 	To look around the scene with the mouse, we have to change the cameraFront vector based on
 	the input of the mouse. 
+	
+	Euler angles are 3 values that can represent any rotation in 3D: pitch, yaw, and roll.
+		
+			Pitch:	how much we are looking up or down (x axis)
+			Yaw:	magnitude we're looking right or left (y axis)
+			Roll: 	how much we are rolling (z axis)
+	
+	Using trignomonetry we can deduce formulas for yaw and pitch.
+	
+	Given a yaw value we can create a camera direction vector:
+	
+		glm::vec3 direction;
+		direction.x = cos(glm::radians(yaw)); 
+		direction.z = sin(glm::radians(yaw));
+		
+	Now pitch:
+	
+		direction.y = sin(glm::radians(pitch));
+	
+	However, the xz sides are influenced by cos(pitch) so we need to make sure that they are also
+	part of the direction vector. Including everything:
+	
+		direction.x = cos(glm::radians(yaw)) * direction.x = cos(glm::radians(pitch));  
+		direction.y = sin(glm::radians(pitch));
+		direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+	
+	To make sure the camera points in the negative z direction by default we can give the yaw
+	a default value of a 90 degree clockwise rotation. Positive degrees rotate counterclockwise.
+	
+	yaw = -90.0f
+	
+	
+										Mouse Input
+										
+	Yaw and pitch values are obtained from a mouse, controller, joystick, etc. Horizontal 
+	movement affects the yaw and vertical movement affects the pitch. The idea is to store the
+	last frame's mouse positions and calculate in the current frame how much the values changed.
+	
+	First we tell GLFW to hide the cursor and capture it:
+	
+		glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+	
+	To calculate the pitch and yaw values, we need to tell GLFW to listen to mouse-movement events. 
+	
+		void mouse_callback(GLFWwindow *window, double xpos, double ypos);
+		
+	xpos and ypos represent the current mouse position. 
+	
+		glfwSetCursorPosCallback(window, mouse_callback);
+		
+	Calculate the offset of the mouse since the last frame. Initialize the mouse to the center of 
+	the screen.
+		
+		float lastX = 400, lastY = 300;
+		
+		float xoffset = xpos - lastX;
+		float yoffset = lastY - ypos;
+		lastX = xpos;
+		lastY = ypos;
+		
+		const float senstitivty = 0.1f;
+		xoffset *= sensitivity;
+		yoffset *= sensitivity;
+		
+	Add the offset values to the globally declared pitch and yaw values.
+	
+		yaw += xoffset;
+		pitch += yoffset;
+	
 */
 
