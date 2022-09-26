@@ -172,6 +172,31 @@
 	
 			float specularStrength = 0.5;
 
+//	Next we calculate the view direction and the corresponding reflect vector along the normal axis.
+	
+			vec3 viewDir = normalize(viewPos - fragPos);
+			vec3 reflectDir = reflect(-lightDir, norm
+			
+/*	The lightDir vector must be negated. The reflect function expects the first vector to 
+	point from the light source toward the fragment position, but currently it is pointing 
+	the other way around. The second argument expects a normal vector.
+	
+	Now we calculate the specular component: */
+	
+			float spec = pow(max(dot(viewDir, reflectDir), 0.0) 32);
+			vec3 specular = specularStrength * spec * lightColor;
+									  
+/*	First we calculate the dot product between the view direction and the reflect direction,
+	and then raise it to a power of 32. The 32 is a shininess value of the highlight. A higher
+	value more properly reflects the light instead of scattering it around. 
+	
+	Lastly, add this to the ambient and diffuse components and multiply by the object's color. */
+			
+			vec3 result = (ambient + diffuse + specular) * objectColor;
+			fragColor = vec4(result, 1.0);
+			
+	
+
 
 
 				
