@@ -90,9 +90,87 @@
 
 			// Fragment
 			in vec3 Normal;
-			
+
+/*	Now we still need the light and fragment positions. Because the light position is a single
+	static variable, it can be declared as a uniform in the fragment shader. Afterwards the
+	render loop must be updated: */
+
+			uniform vec3 lightPos;
+
+			// Render loop
+			lightingShader.setVec3("lightPos", lightPos);
+
+/*	The last thing needed is the fragment position. All the lighting calculations will be done in
+	world space so we want a vertex position that is in world space first. We can accomplish this
+	by multiplying the vertex position attribute with the model matrix only to transform it into
+	world space coordinates. */
+
+			// Vertex shader
+			out vec3 fragPos;
+			out vec3 Normal;
+			void main()
+			{
+    			gl_Position = projection * view * model * vec4(aPos, 1.0);
+				fragPos = vec3(model * vec4(aPos, 1.0));
+    			Normal = aNormal;
+			} 
+
+			// Frag shader
+			in vec3 fragPos;
+
+/*	This in variable will be interpolated from the 3 world position vectors of the triangle to 
+	form the fragPos vector that is the per-fragment world position. 
+	
+	The first thing needed for the lighting calculations is the direction vector between the light
+	source and the fragment position. This is calculated by taking the difference vector between
+	the two vectors. All relevant vectors should be normalized. */
+
+			vec3 norm = normalize(Normal);
+			vec3 lightDir = normalize(lightPos - fragPos);
+
+/*	Typically we do not care about the magnitude of a vector or their position, only their
+	direction. Almost all calculations are done with unit vectors in order to simplify them.
+	Make sure to always normalize the relevant vectors as it is a common mistake to forget to 
+	do so.
+	
+	Afterwards, we must calculate the diffuse impact of the light on the current fragment by
+	taking the dot product between the norm and lightDir vectors. The resulting value is then
+	multiplied with the light's color to get the diffuse component. 
+	
+	If the angle between both vectors is greather than 90 degrees the dot product will become
+	negative. For this reason we use the max function that returns the highest of both its
+	parameters to make sure the diffuse component never becomes negative. 
+	
+	We then add the ambient and diffuse colors and multiply the result by the color of the 
+	object. */
+
+			float diff = max(dot(norm, lightDir), 0.0);
+			vec3 diffuse = diff * lightColor;
+	
+			vec3 result = (ambient + diffuse) + objectColor;
+			fragColor = vec4(result, 1.0);
 
 
+
+/*	Specular Lighting
+	
+	This lighting is based on the light's direction vector and the object's normal vectors,
+	but also on the view direction. It is based on the reflective properties of surfaces. 
+	We calculate a reflection vector by reflecting the light direction around the normal 
+	vector.
+	
+	The view vector is the one extra variable needed to perform the specular lighting 
+	calculation, which can be done by using the viewer's world space position and the fragment
+	position. To get the world space coordinates of the viewer, take the position vector of the
+	camera object. */
+
+			uniform vec3 viewPos;
+			lightingShader.setVec3("viewPos", camera.Position);
+
+/*	Now we can calculate the specular intensity. First we define a value to give the highlight
+	a medium-bright color so that the impact is not too great. */
+	
+			float specularStrength = 0.5;
 
 
 
