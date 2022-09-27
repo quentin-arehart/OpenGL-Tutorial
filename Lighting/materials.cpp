@@ -70,5 +70,40 @@
 			};
 			
 			uniform Light light;
+
+/*	A light source has a different intensity for its ambient, diffuse, and specular components. The 
+	ambient light is usually set to a low intensity because we don't want the ambient color to be too
+	dominant. The diffuse component of a light source is usually set to the exact color we would like it
+	to have, and the specular component is typically kept at vec3(1.0), shining at full intensity. We also
+	add the light's position vector to the struct. We then update the fragment shader: */
+
+			vec3 ambient = light.ambient * material.ambient;
+			vec3 diffuse = light.diffuse * (diff * material.diffuse);
+			vec3 specular = light.specular * (spec * material.specular);
+
+//	Then set the light intensities in the application:
+			lightingShader.setVec3("light.ambient",  0.2f, 0.2f, 0.2f);
+			lightingShader.setVec3("light.diffuse",  0.5f, 0.5f, 0.5f); // darken diffuse light a bit
+			lightingShader.setVec3("light.specular", 1.0f, 1.0f, 1.0f); 
+
+
+/*	It is also possible to change the light color over time. A different light color greatly influences the
+	object color output. It also has a significant impact on the visual output. 
+	
+	We can easily change the color over time by changing the light's ambient and diffuse colors via sin
+	and glfwGetTime: */
+
+			glm::vec3 lightColor:
+			lightColor.x = sin(glfwGetTime() * 2.0f);
+			lightColor.y = sin(glfwGetTime() * 0.7f);
+			lightColor.z = sin(glfwGetTime() * 1.3f);
+  
+			glm::vec3 diffuseColor = lightColor   * glm::vec3(0.5f); 
+			glm::vec3 ambientColor = diffuseColor * glm::vec3(0.2f); 
+  
+			lightingShader.setVec3("light.ambient", ambientColor);
+			lightingShader.setVec3("light.diffuse", diffuseColor);
+			
+			
 				
 				
