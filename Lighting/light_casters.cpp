@@ -124,9 +124,67 @@
 			specular *= attentuation;
 
 
-/*	Spot Light
+/*	Spotlight
 
+	A spotlight is a light source that is located somewhere in the environment that shoots light
+	rays in a specific direction. Objects within a certain radius are lit and everything else
+	stays dark, like a street lamp or a flashlight. 
+	
+	A spotlight is represented by a world-space position, a direction, and a cutoff angle that 
+	specifies the radius of the spotlight. 
+
+	A spotlight has the following components:
+		
+			LightDir: 	the vector pointing from the fragment to the light source
+			SpotDir: 	the direction the spotlight is aiming at
+			Phi:		the cutoff angle that specifies the spotlight's radius
+			Theta:		the angle between the LightDir vector and SpotDir vector. Theta should be
+						smaller than phi to be inside the spotlight. 
+						
+	We have to calculate the dot product, which returns the cosine of the angle between two unit
+	vectors, between the LightDir vector and the SpotDir vector and compare this with the cutoff
+	angle phi. 
 	
 	
+	Flashlight
+	
+	A flashlight is a spotlight located at the viewer's position and usually aimed straight ahead
+	from the viewer's perspective. It is continually updated based on the player's position and
+	orientation. The values we need for the fragment shader are the spotlight's position vector,
+	the spotlight's direction vector, and the cutoff angle. These can be stored in the Light 
+	struct. */
+
+			struct Light {
+				vec3 position;
+				vec3 direction;
+				float cutOff;
+			};
+
+//	Pass the appropriate values to the shader
+
+			lightingShader.setVec3("light.position", camera.Position);
+			lightingShader.setVec3("light.direction", camera.Front);
+			lightingShader.float("light.cutOff", glm::cos(glm::radians(12.5f)));
+
+/*	We are not setting an angle for the cutoff but calculating the cosine value based on an 
+	angle and pass the cosine result to the fragment shader. In the fragment shader we will 
+	calculate the dot product between the LightDir and SpotDir vectors, and we cannot directly
+	compare an angle with a cosine value. To get the angle in the shader we have to calculate the
+	inverse cosine of the dot product's result which is an expensive operation. To save 
+	some performance we can calculate the cosine value of an angle beforehand, and pass this 
+	result to the fragment shader. Since both angles are now represented as cosines, we can 
+	compare them without expensive operations. 
+	
+	Now we just calculate the theta value and compare it with the phi value. */
+
+			float theta = dot(lightDir, normalize(-light.direction));
+			
+			if (theta > light.cutOff)
+			{
+				// do lighting calculations
+			}
+			else // use ambient light so the scene isn't completely dark outside the spotlight
+				color = vec4(light.ambient * vec3(texture(material.diffuse), TexCoords)), 1.0);
+
 	
 	
