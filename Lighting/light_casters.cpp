@@ -186,5 +186,35 @@
 			else // use ambient light so the scene isn't completely dark outside the spotlight
 				color = vec4(light.ambient * vec3(texture(material.diffuse), TexCoords)), 1.0);
 
+
+/*	Smooth Edges
+	
+	To create the effect of a smooth edged spotlight we want to simulate an inner and outer cone.
+	The inner cone is set as the cone defined already, we need an outer cone that gradually dims
+	the light from the inner cone to the edges of the outer cone. 
+	
+	We cab simply define another cosine value that represents the anble between the spotlight's
+	direction vector and the outer cone's vector (equal to its radius). If the fragment is 
+	between the two cones, it should calculate an intensity from 0.0 to 1.0, with the inner cone
+	intensity being 1.0. 
+	
+	We can use this equation:
+	
+				I = (θ − γ) / ϵ
+			
+	Where epsilon represents the cosine difference between the inner (phi) and outer cone 
+	(gamma), essentially ϵ = θ − γ. The resulting I value is the intensity of the spotlight at
+	the current fragment. 
+	
+	The intensity value is now negative when outside the spotlight, and higher than 1.0 when 
+	inside the inner cone. If we clamp the values we no longer need an if-else statement in the
+	fragment shader anymore. */
+
+			float theta = dot(lightDir, normalize(-light.direction));
+			float epsilon = light.cutOff - lout.outerCutOff;
+			float intensity = clamp(theta - light.outerCutOff) / epsilon, 0.0, 1.0);
+
+//	Do not forget to add the outer cutoff to the Light struct.
+
 	
 	
